@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import Item from "./item";
-import itemsData from "./items.json";
 
-export default function ItemList() {
+export default function ItemList({ items }) {
   const [sortBy, setSortBy] = useState("name");
 
-  const sortedItems = [...itemsData].sort((a, b) => {
+  // Create a sorted copy of items based on the selected sort key
+  const sortedItems = [...items].sort((a, b) => {
     const aVal = a[sortBy];
     const bVal = b[sortBy];
 
@@ -22,7 +22,8 @@ export default function ItemList() {
     }
   });
 
-  const groupedItems = itemsData.reduce((groups, item) => {
+  // Group items by category without mutating the original array
+  const groupedItems = items.reduce((groups, item) => {
     const category = item.category;
     if (!groups[category]) {
       groups[category] = [];
@@ -31,17 +32,19 @@ export default function ItemList() {
     return groups;
   }, {});
 
+  // Sort categories and items within each category
   const sortedGroupedCategories = Object.keys(groupedItems).sort();
 
-  sortedGroupedCategories.forEach((category) => {
-    groupedItems[category].sort((a, b) => {
+  const sortedGroupedItems = sortedGroupedCategories.reduce((acc, category) => {
+    acc[category] = [...groupedItems[category]].sort((a, b) => {
       const nameA = a.name?.toUpperCase() ?? "";
       const nameB = b.name?.toUpperCase() ?? "";
       if (nameA < nameB) return -1;
       if (nameA > nameB) return 1;
       return 0;
     });
-  });
+    return acc;
+  }, {});
 
   return (
     <div className="p-4">
@@ -52,7 +55,7 @@ export default function ItemList() {
           className={`px-4 py-2 rounded ${
             sortBy === "name"
               ? "bg-blue-500 text-black"
-              : "bg-gray-200 text-black "
+              : "bg-gray-200 text-black"
           }`}
         >
           Sort by Name
@@ -61,7 +64,7 @@ export default function ItemList() {
           onClick={() => setSortBy("category")}
           className={`px-4 py-2 rounded ${
             sortBy === "category"
-              ? "bg-blue-500 text-white"
+              ? "bg-blue-500 text-black"
               : "bg-gray-200 text-black"
           }`}
         >
@@ -71,7 +74,7 @@ export default function ItemList() {
           onClick={() => setSortBy("grouped")}
           className={`px-4 py-2 rounded ${
             sortBy === "grouped"
-              ? "bg-blue-500 text-white"
+              ? "bg-blue-500 text-black"
               : "bg-gray-200 text-black"
           }`}
         >
@@ -88,7 +91,7 @@ export default function ItemList() {
                 {category}
               </h2>
               <ul className="space-y-1">
-                {groupedItems[category].map((item) => (
+                {sortedGroupedItems[category].map((item) => (
                   <Item
                     key={item.id}
                     name={item.name}
